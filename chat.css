@@ -1,0 +1,452 @@
+/*
+ * Public chat widget styles.
+ *
+ * Global, unhashed class names on purpose (rwp-chat-*), like .rwp-fl-* and .rwpb-*: they are what
+ * a site targets from Appearance → Custom CSS, so they must stay stable. Not a CSS module.
+ *
+ * Everything is written with logical properties (inset-inline-start, padding-inline, text-align:
+ * start, margin-inline-end) so dir="rtl" mirrors the whole widget without a second stylesheet.
+ * The one physical choice is which corner the launcher sits in, which is the site owner's.
+ *
+ * Layers (see the note in CLAUDE.md): the header is 9800, the off-canvas menu 9990, the search
+ * overlay 9995, the lightbox 10000. The launcher is 9840 so it floats over page content and the
+ * header; the panel is 9984, above the launcher and below every full-screen overlay.
+ */
+
+.rwp-chat {
+  --rwp-chat-accent: #2563eb;
+  --rwp-chat-accent-text: #ffffff;
+  --rwp-chat-surface: #ffffff;
+  --rwp-chat-text: #0f172a;
+  --rwp-chat-muted: #64748b;
+  --rwp-chat-border: rgba(15, 23, 42, 0.12);
+  --rwp-chat-bubble: #f1f5f9;
+  --rwp-chat-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  --rwp-chat-radius: 16px;
+  /* Raised when Floating Login uses the same corner, so the two buttons never sit on top of
+     each other. ChatLauncher sets it from core's floating login state. */
+  --rwp-chat-offset: 24px;
+  font-family: var(--rwp-font-family, system-ui, -apple-system, "Segoe UI", sans-serif);
+  color: var(--rwp-chat-text);
+}
+
+.rwp-chat-theme-dark {
+  --rwp-chat-surface: #0f172a;
+  --rwp-chat-text: #e2e8f0;
+  --rwp-chat-muted: #94a3b8;
+  --rwp-chat-border: rgba(148, 163, 184, 0.24);
+  --rwp-chat-bubble: rgba(148, 163, 184, 0.16);
+}
+
+.rwp-chat-theme-glass {
+  --rwp-chat-surface: rgba(255, 255, 255, 0.72);
+  --rwp-chat-bubble: rgba(15, 23, 42, 0.07);
+  --rwp-chat-border: rgba(255, 255, 255, 0.5);
+}
+
+/* Launcher ------------------------------------------------------------------------------------ */
+
+.rwp-chat-launcher {
+  position: fixed;
+  inset-block-end: var(--rwp-chat-offset);
+  z-index: 9840;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rwp-chat-accent);
+  color: var(--rwp-chat-accent-text);
+  font: 600 15px/1.2 inherit;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rwp-chat-launcher:hover { transform: translateY(-2px); }
+.rwp-chat-launcher:focus-visible { outline: 3px solid var(--rwp-chat-accent); outline-offset: 3px; }
+
+/* Physical, because a corner is a physical choice the site owner made; it must not flip in RTL. */
+.rwp-chat-pos-bottom-right .rwp-chat-launcher,
+.rwp-chat-pos-bottom-right .rwp-chat-panel,
+.rwp-chat-pos-bottom-right .rwp-chat-nudge { right: 24px; }
+.rwp-chat-pos-bottom-left .rwp-chat-launcher,
+.rwp-chat-pos-bottom-left .rwp-chat-panel,
+.rwp-chat-pos-bottom-left .rwp-chat-nudge { left: 24px; }
+
+.rwp-chat-launcher-badge {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font: 700 12px/20px inherit;
+  text-align: center;
+}
+
+/* The proactive nudge: a speech bubble above the launcher, never a modal. */
+.rwp-chat-nudge {
+  position: fixed;
+  inset-block-end: calc(var(--rwp-chat-offset) + 62px);
+  z-index: 9840;
+  max-width: min(280px, calc(100vw - 48px));
+  padding: 12px 14px;
+  border-radius: var(--rwp-chat-radius);
+  background: var(--rwp-chat-surface);
+  border: 1px solid var(--rwp-chat-border);
+  box-shadow: var(--rwp-chat-shadow);
+  font-size: 14px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rwp-chat-nudge-close {
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-end: 6px;
+  border: 0;
+  background: none;
+  color: var(--rwp-chat-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Panel --------------------------------------------------------------------------------------- */
+
+.rwp-chat-panel {
+  position: fixed;
+  inset-block-end: calc(var(--rwp-chat-offset) + 62px);
+  z-index: 9984;
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 32px));
+  height: min(600px, calc(100vh - 140px));
+  border-radius: var(--rwp-chat-radius);
+  border: 1px solid var(--rwp-chat-border);
+  background: var(--rwp-chat-surface);
+  box-shadow: var(--rwp-chat-shadow);
+  overflow: hidden;
+}
+
+.rwp-chat-theme-glass .rwp-chat-panel {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Inline boxes sit in the page flow; everything inside them is the floating panel's markup. */
+.rwp-chat-inline {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: clamp(380px, 60vh, 620px);
+  box-shadow: none;
+}
+
+.rwp-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-block-end: 1px solid var(--rwp-chat-border);
+  background: var(--rwp-chat-accent);
+  color: var(--rwp-chat-accent-text);
+}
+
+.rwp-chat-avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.25);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.rwp-chat-head-text { flex: 1; min-width: 0; }
+.rwp-chat-head-title { font: 600 15px/1.3 inherit; }
+.rwp-chat-head-status { font-size: 12px; opacity: 0.85; }
+
+.rwp-chat-head button {
+  border: 0;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rwp-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--rwp-chat-surface);
+}
+
+/* Messages ------------------------------------------------------------------------------------ */
+
+.rwp-chat-message { display: flex; flex-direction: column; max-width: 85%; gap: 4px; }
+/* margin-inline-start: auto, not float or margin-left, so RTL mirrors it. */
+.rwp-chat-message-user { margin-inline-start: auto; align-items: flex-end; }
+.rwp-chat-message-bot,
+.rwp-chat-message-agent { margin-inline-end: auto; align-items: flex-start; }
+
+.rwp-chat-bubble {
+  padding: 10px 13px;
+  border-radius: 14px;
+  background: var(--rwp-chat-bubble);
+  font-size: 14px;
+  line-height: 1.55;
+  /* Visitors paste URLs and stack traces; neither may widen the panel. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  text-align: start;
+}
+
+.rwp-chat-message-user .rwp-chat-bubble {
+  background: var(--rwp-chat-accent);
+  color: var(--rwp-chat-accent-text);
+}
+
+.rwp-chat-meta { font-size: 11px; color: var(--rwp-chat-muted); }
+
+.rwp-chat-message-system {
+  align-self: center;
+  max-width: 100%;
+  text-align: center;
+}
+
+.rwp-chat-message-system .rwp-chat-bubble {
+  background: none;
+  border: 1px dashed var(--rwp-chat-border);
+  color: var(--rwp-chat-muted);
+  font-size: 12px;
+}
+
+.rwp-chat-attachments { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.rwp-chat-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--rwp-chat-border);
+  border-radius: 10px;
+  color: inherit;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.rwp-chat-attachment-image {
+  display: block;
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid var(--rwp-chat-border);
+}
+
+.rwp-chat-typing { display: inline-flex; gap: 4px; padding: 12px 14px; }
+.rwp-chat-typing span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--rwp-chat-muted);
+  animation: rwp-chat-blink 1.2s infinite ease-in-out;
+}
+.rwp-chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+.rwp-chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes rwp-chat-blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rwp-chat-typing span { animation: none; opacity: 0.6; }
+  .rwp-chat-launcher { transition: none; }
+}
+
+/* Cards --------------------------------------------------------------------------------------- */
+
+.rwp-chat-card {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--rwp-chat-border);
+  border-radius: 12px;
+  background: var(--rwp-chat-surface);
+  text-align: start;
+}
+
+.rwp-chat-card-image {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--rwp-chat-bubble);
+}
+
+.rwp-chat-card-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rwp-chat-card-title { font: 600 13px/1.35 inherit; color: inherit; text-decoration: none; }
+.rwp-chat-card-title:hover { text-decoration: underline; }
+.rwp-chat-card-excerpt {
+  font-size: 12px;
+  color: var(--rwp-chat-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rwp-chat-card-price { font: 600 13px/1.3 inherit; }
+.rwp-chat-card-was { color: var(--rwp-chat-muted); font-weight: 400; text-decoration: line-through; margin-inline-start: 6px; }
+.rwp-chat-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-block-start: 2px; }
+
+.rwp-chat-card-button {
+  padding: 5px 10px;
+  border: 1px solid var(--rwp-chat-accent);
+  border-radius: 999px;
+  background: var(--rwp-chat-accent);
+  color: var(--rwp-chat-accent-text);
+  font: 600 12px/1.3 inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rwp-chat-card-button-ghost { background: none; color: var(--rwp-chat-accent); }
+.rwp-chat-card-out { font-size: 12px; color: #b91c1c; }
+
+.rwp-chat-order-rows { display: grid; gap: 2px; font-size: 12px; color: var(--rwp-chat-muted); }
+
+/* Forms and the composer ------------------------------------------------------------------------ */
+
+.rwp-chat-form { display: grid; gap: 10px; padding: 16px; }
+.rwp-chat-form p { margin: 0; font-size: 13px; color: var(--rwp-chat-muted); }
+.rwp-chat-form label { display: grid; gap: 4px; font: 500 12px/1.3 inherit; }
+
+.rwp-chat-form input,
+.rwp-chat-form textarea,
+.rwp-chat-composer textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--rwp-chat-border);
+  border-radius: 10px;
+  background: var(--rwp-chat-surface);
+  color: var(--rwp-chat-text);
+  font: 400 14px/1.4 inherit;
+}
+
+.rwp-chat-button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--rwp-chat-accent);
+  color: var(--rwp-chat-accent-text);
+  font: 600 14px/1.2 inherit;
+  cursor: pointer;
+}
+
+.rwp-chat-button[disabled] { opacity: 0.55; cursor: default; }
+
+.rwp-chat-button-ghost {
+  background: none;
+  border: 1px solid var(--rwp-chat-border);
+  color: var(--rwp-chat-text);
+}
+
+.rwp-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 8px;
+}
+
+.rwp-chat-chip {
+  padding: 6px 11px;
+  border: 1px solid var(--rwp-chat-border);
+  border-radius: 999px;
+  background: none;
+  color: var(--rwp-chat-text);
+  font: 500 12px/1.3 inherit;
+  cursor: pointer;
+}
+
+.rwp-chat-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-block-start: 1px solid var(--rwp-chat-border);
+}
+
+.rwp-chat-composer textarea { resize: none; max-height: 120px; }
+
+.rwp-chat-icon-button {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--rwp-chat-border);
+  border-radius: 10px;
+  background: none;
+  color: var(--rwp-chat-text);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.rwp-chat-send {
+  border-color: var(--rwp-chat-accent);
+  background: var(--rwp-chat-accent);
+  color: var(--rwp-chat-accent-text);
+}
+
+/* Send is an arrow, and an arrow points the way the language reads. */
+.rwp-chat-send::before { content: "➤"; display: inline-block; }
+[dir="rtl"] .rwp-chat-send::before { transform: scaleX(-1); }
+
+.rwp-chat-pending {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 8px;
+  font-size: 12px;
+  color: var(--rwp-chat-muted);
+}
+
+.rwp-chat-pending-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--rwp-chat-border);
+  border-radius: 999px;
+}
+
+.rwp-chat-error {
+  margin: 0;
+  padding: 8px 16px;
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  font-size: 12px;
+  text-align: start;
+}
+
+.rwp-chat-note { padding: 0 16px 10px; font-size: 11px; color: var(--rwp-chat-muted); text-align: start; }
+
+/* Phones: full width, no wasted gutters, and the panel takes the screen. */
+@media (max-width: 520px) {
+  .rwp-chat-panel:not(.rwp-chat-inline) {
+    inset-inline: 8px;
+    inset-block: 8px calc(var(--rwp-chat-offset) + 62px);
+    width: auto;
+    height: auto;
+  }
+  .rwp-chat-pos-bottom-right .rwp-chat-panel:not(.rwp-chat-inline),
+  .rwp-chat-pos-bottom-left .rwp-chat-panel:not(.rwp-chat-inline) { right: 8px; left: 8px; }
+}

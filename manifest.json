@@ -1,0 +1,21 @@
+{
+  "id": "rwp-chat",
+  "name": "RWP Chat & AI Assistant",
+  "version": "1.0.0",
+  "author": "React-WP",
+  "description": "A floating and inline chat widget with a Gemini-backed assistant, a pre-chat lead form, file attachments, product and order context on shop pages, and handover to a live agent by Telegram or WhatsApp.",
+  "entry": "./index.tsx",
+  "media": {
+    "prefixes": ["plugins/rwp-chat"]
+  },
+  "database": {
+    "schema": "./schema.sql",
+    "uninstall": "./uninstall.sql",
+    "tables": ["chat_sessions", "chat_messages", "live_agent_requests", "chat_canned_responses", "chat_secrets"],
+    "options": ["chat\\_%"],
+    "retains": [
+      "Attachments visitors sent stay in the Media Library's chat_media folder, and at Cloudinary. Delete that folder from the Media Library to remove them.",
+      "rwp_chat_card_product and rwp_chat_order_status belong to rwp-shop and are dropped by its own uninstall."
+    ]
+  }
+}
